@@ -1,0 +1,58 @@
+<script th:inline="javascript">
+
+
+    let globalCategory = [[${category}]];
+    let globalPage = [[${currentPage}]];
+    console.log(globalCategory + ' ' + globalPage);
+
+
+</script>
+<div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+  <strong th:text="${errorMessage}"></strong>
+</div>
+<div class="row row-cols-1 row-cols-md-5 g-4" th:if="${products !=null and !products.isEmpty()}">
+        <div th:each="product : ${products}" class="col">
+            <div class="card h-100" th:id="|cardId-${product.id}|">
+                <img th:src="@{/assets/{fileName}(fileName=${product.imagePath})}" class="card-img-top" alt="Product Image">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${product.label}"></h5>
+                    <p class="card-text" th:text="${product.description}"></p>
+                    <p class="card-text" th:inline="text" th:id="|priceId-${product.id}|">Prix : [[${#numbers.formatDecimal(product.prix, 0, 'COMMA', 2, 'POINT')}]] €</p>
+                    <div th:if="${product.promotion != null}" class="card-text">
+                        <p class="card-text has-promotion">Promotion : [[${product.promotion.discountPercentage}]] %</p>
+                        <p class="card-text has-promotion text-danger"> Nouveau Prix : [[${#numbers.formatDecimal(product.getPrixPromotion(), 0, 'COMMA', 2, 'POINT')}]] €</p>
+                        <p class="card-text">Du : [[${product.promotion.startDate}]]</p>
+                        <p class="card-text">Au : [[${product.promotion.endDate}]]</p>
+                    </div>
+                    <p th:id="|promotionId-${product.id}|" class="card-text text-danger"></p>
+                    <p th:id="|newPriceId-${product.id}|" class="card-text"></p>
+                </div>
+                <div class="d-flex justify-content-evenly card-footer" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                  <a th:href="@{editProduct/{id}(id=${product.id})}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                    <button type="button" data-bs-toggle="modal" data-bs-target="#addPromotionModal" class="btn btn-dark" th:onclick="|showPromotionForm(${product.id}, ${product.prix})|">Add promo</button>
+                    <a onclick="return confirm('Etes vous sure?')"
+                     th:href="@{deleteProduct/{id}(id=${product.id})}" class="btn btn-danger">
+                    <i class="bi bi-trash"></i>
+                  </a>
+                </div>
+            </div>
+        </div>
+</div>
+<div class="card-footer my-4">
+  <nav aria-label="Page navigation mt-5">
+    <ul class="nav nav-pills">
+      <li th:each="page,status:${pages}">
+          <input type="button" th:class="${status.index==currentPage?'btn btn-info ms-1':'btn btn-outline-info ms-1'}"
+                  th:onclick="|getProductsByCategory( ${category}, ${status.index})|"
+                  th:value="${status.index + 1}">
+          </input>
+      </li>
+    </ul>
+  </nav>
+</div>
+
+<div th:unless="${products!=null and !products.isEmpty()}" class="alert alert-danger row row-cols-1 row-cols-md-5 mb-4" role="alert">
+  <h2>La liste des produits est vide</h2>
+</div>
